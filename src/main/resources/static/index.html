@@ -4,145 +4,310 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bookstore Inventory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 2em; }
-        h1 { color: #333; }
-        table { border-collapse: collapse; width: 100%; margin-top: 1em; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background: #f4f4f4; }
-        tr:nth-child(even) { background: #fafafa; }
-        .actions button { margin-right: 5px; }
-        form { margin-bottom: 2em; }
-        label { margin-right: 1em; }
-        input[type="text"], input[type="number"] { margin-right: 1em; }
+        .book-title-link {
+            color: #0d6efd;
+            text-decoration: underline dotted;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .book-title-link:hover, .book-title-link:focus {
+            color: #0a58ca;
+            text-decoration: underline solid;
+            outline: none;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f1f3f5;
+        }
+        .actions { white-space: nowrap; }
+        html, body {
+            height: 100%;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main.container {
+            flex: 1 0 auto;
+        }
+        .footer {
+            flex-shrink: 0;
+        }
+        :root {
+            --bs-body-bg-light: #f8f9fa;
+            --bs-body-bg-dark: #181a1b;
+            --bs-body-color-dark: #f8f9fa;
+            --bs-card-bg-dark: #23272b;
+            --bs-modal-bg-dark: #23272b;
+            --bs-table-bg-dark: #23272b;
+            --bs-table-striped-bg-dark: #212529;
+        }
+        body.theme-dark {
+            background-color: var(--bs-body-bg-dark) !important;
+            color: var(--bs-body-color-dark) !important;
+        }
+        body.theme-dark #main-navbar,
+        body.theme-dark #main-footer {
+            background-color: #23272b !important;
+            color: #f8f9fa !important;
+        }
+        body.theme-dark .card {
+            background-color: var(--bs-card-bg-dark) !important;
+            color: #f8f9fa !important;
+        }
+        body.theme-dark .modal-content {
+            background-color: var(--bs-modal-bg-dark) !important;
+            color: #f8f9fa !important;
+        }
+        body.theme-dark .table {
+            background-color: var(--bs-table-bg-dark) !important;
+            color: #f8f9fa !important;
+        }
+        body.theme-dark .table-striped > tbody > tr:nth-of-type(odd) {
+            background-color: var(--bs-table-striped-bg-dark) !important;
+        }
+        body.theme-dark .form-control {
+            background-color: #23272b !important;
+            color: #f8f9fa !important;
+            border-color: #495057;
+        }
+        body.theme-dark .form-control:focus {
+            background-color: #23272b !important;
+            color: #f8f9fa !important;
+            border-color: #6c757d;
+        }
+        body.theme-dark .modal-header.bg-primary {
+            background-color: #375a7f !important;
+        }
+        body.theme-dark .btn-close {
+            filter: invert(1);
+        }
+        body.theme-dark .nav-tabs .nav-link.active {
+            background-color: #23272b !important;
+            color: #f8f9fa !important;
+            border-color: #23272b #23272b #181a1b;
+        }
+        body.theme-dark .nav-tabs .nav-link {
+            color: #f8f9fa !important;
+        }
+        body.theme-dark .alert-warning {
+            background-color: #3a3b3c !important;
+            color: #ffe066 !important;
+            border-color: #ffe066 !important;
+        }
+        .sortable { cursor: pointer; user-select: none; }
+        .sort-indicator { font-size: 0.9em; margin-left: 2px; }
+        body.theme-dark input::placeholder,
+        body.theme-dark input::-webkit-input-placeholder,
+        body.theme-dark input::-moz-placeholder,
+        body.theme-dark input:-ms-input-placeholder,
+        body.theme-dark input::-ms-input-placeholder {
+            color: #ccc !important;
+            opacity: 1 !important;
+        }
     </style>
 </head>
-<body>
-    <h1>Bookstore Inventory</h1>
-    <form id="book-form">
-        <input type="hidden" id="book-id">
-        <label>Title: <input type="text" id="title" required></label>
-        <label>Author: <input type="text" id="author" required></label>
-        <label>Price: <input type="number" id="price" step="0.01" required></label>
-        <label>Quantity: <input type="number" id="quantity" required></label>
-        <button type="submit">Add Book</button>
-        <button type="button" id="cancel-edit" style="display:none;">Cancel</button>
-    </form>
-    <table id="books-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Title</th>
-                <th>Author</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-    <script>
-        const apiUrl = '/books';
-        const form = document.getElementById('book-form');
-        const tableBody = document.querySelector('#books-table tbody');
-        const cancelEditBtn = document.getElementById('cancel-edit');
-        let editingId = null;
-
-        function fetchBooks() {
-            fetch(apiUrl)
-                .then(res => res.json())
-                .then(books => {
-                    tableBody.innerHTML = '';
-                    books.forEach(book => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${book.id}</td>
-                            <td>${book.title}</td>
-                            <td>${book.author}</td>
-                            <td>${book.price}</td>
-                            <td>${book.quantity}</td>
-                            <td class="actions">
-                                <button onclick="viewBook(${book.id})">View</button>
-                                <button onclick="editBook(${book.id})">Edit</button>
-                                <button onclick="deleteBook(${book.id})">Delete</button>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                });
-        }
-
-        window.viewBook = function(id) {
-            fetch(`${apiUrl}/${id}`)
-                .then(res => res.json())
-                .then(book => {
-                    alert(`ID: ${book.id}\nTitle: ${book.title}\nAuthor: ${book.author}\nPrice: ${book.price}\nQuantity: ${book.quantity}`);
-                });
-        }
-
-        window.editBook = function(id) {
-            fetch(`${apiUrl}/${id}`)
-                .then(res => res.json())
-                .then(book => {
-                    document.getElementById('book-id').value = book.id;
-                    document.getElementById('title').value = book.title;
-                    document.getElementById('author').value = book.author;
-                    document.getElementById('price').value = book.price;
-                    document.getElementById('quantity').value = book.quantity;
-                    editingId = book.id;
-                    form.querySelector('button[type="submit"]').textContent = 'Update Book';
-                    cancelEditBtn.style.display = '';
-                });
-        }
-
-        window.deleteBook = function(id) {
-            if (confirm('Are you sure you want to delete this book?')) {
-                fetch(`${apiUrl}/${id}`, { method: 'DELETE' })
-                    .then(() => fetchBooks());
-            }
-        }
-
-        form.onsubmit = function(e) {
-            e.preventDefault();
-            const book = {
-                title: document.getElementById('title').value,
-                author: document.getElementById('author').value,
-                price: parseFloat(document.getElementById('price').value),
-                quantity: parseInt(document.getElementById('quantity').value)
-            };
-            if (editingId) {
-                fetch(`${apiUrl}/${editingId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(book)
-                }).then(() => {
-                    resetForm();
-                    fetchBooks();
-                });
-            } else {
-                fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(book)
-                }).then(() => {
-                    resetForm();
-                    fetchBooks();
-                });
-            }
-        };
-
-        cancelEditBtn.onclick = function() {
-            resetForm();
-        };
-
-        function resetForm() {
-            form.reset();
-            editingId = null;
-            form.querySelector('button[type="submit"]').textContent = 'Add Book';
-            cancelEditBtn.style.display = 'none';
-        }
-
-        fetchBooks();
-    </script>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow" id="main-navbar">
+        <div class="container-fluid">
+            <span class="navbar-brand fw-bold d-flex align-items-center">
+                <img src="https://cdn-icons-png.flaticon.com/512/29/29302.png" alt="Bookstore Logo" width="32" height="32" class="me-2">
+                Bookstore
+            </span>
+            <span class="navbar-text h4 mb-0">Inventory System</span>
+            <div class="form-check form-switch ms-3">
+                <input class="form-check-input" type="checkbox" id="theme-toggle">
+                <label class="form-check-label text-white" for="theme-toggle"><i class="bi bi-moon-stars-fill"></i> Dark Mode</label>
+            </div>
+        </div>
+    </nav>
+    <div class="alert alert-warning text-center rounded-0 mb-4" role="alert">
+        <strong>Welcome!</strong> Manage your bookstore inventory easily. Add, update, view, or remove books below.
+    </div>
+    <main class="container mb-5">
+        <div class="row mb-4" id="dashboard-row">
+            <div class="col-md-4 mb-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <div class="h1 mb-2"><i class="bi bi-book"></i></div>
+                        <h5 class="card-title">Total Books</h5>
+                        <p class="card-text display-6" id="dashboard-total-books">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <div class="h1 mb-2"><i class="bi bi-stack"></i></div>
+                        <h5 class="card-title">Total Stock</h5>
+                        <p class="card-text display-6" id="dashboard-total-stock">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <div class="h1 mb-2"><i class="bi bi-currency-dollar"></i></div>
+                        <h5 class="card-title">Total Value</h5>
+                        <p class="card-text display-6" id="dashboard-total-value">RM 0.00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Add search bar above tabs -->
+        <div class="row mb-3">
+            <div class="col-md-6 mx-auto">
+                <input type="text" id="search-bar" class="form-control" placeholder="Search by title or author...">
+            </div>
+        </div>
+        <ul class="nav nav-tabs mb-3" id="bookTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab" aria-controls="inventory" aria-selected="true">Inventory</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sell-tab" data-bs-toggle="tab" data-bs-target="#sell" type="button" role="tab" aria-controls="sell" aria-selected="false">Sell</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="bookTabsContent">
+            <div class="tab-pane fade show active" id="inventory" role="tabpanel" aria-labelledby="inventory-tab">
+                <div class="d-flex justify-content-end mb-3">
+                    <button id="open-modal-btn" class="btn btn-success">Add Book</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="inventory-table" class="table table-bordered table-hover table-striped align-middle shadow-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="sortable" data-sort="title">Title <span class="sort-indicator"></span></th>
+                                <th class="sortable" data-sort="author">Author <span class="sort-indicator"></span></th>
+                                <th class="sortable" data-sort="price">Price <span class="sort-indicator"></span></th>
+                                <th class="sortable" data-sort="quantity">Quantity <span class="sort-indicator"></span></th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="inventory-empty" class="text-center text-muted my-4" style="display:none;">No books in inventory. Add a new book to get started!</div>
+                <!-- Add no results message -->
+                <div id="no-results" class="text-center text-muted my-4" style="display:none;">No results found.</div>
+            </div>
+            <div class="tab-pane fade" id="sell" role="tabpanel" aria-labelledby="sell-tab">
+                <div class="table-responsive">
+                    <table id="sell-table" class="table table-bordered table-hover table-striped align-middle shadow-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="sortable" data-sort="title">Title <span class="sort-indicator"></span></th>
+                                <th class="sortable" data-sort="author">Author <span class="sort-indicator"></span></th>
+                                <th class="sortable" data-sort="price">Price <span class="sort-indicator"></span></th>
+                                <th class="sortable" data-sort="quantity">Quantity <span class="sort-indicator"></span></th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="sell-empty" class="text-center text-muted my-4" style="display:none;">No books available to sell.</div>
+            </div>
+        </div>
+    </main>
+    <footer class="footer bg-dark text-white text-center py-3 mt-5 shadow-lg fixed-bottom" id="main-footer">
+        <div class="container">
+            <span class="fw-bold">&copy; 2025 Bookstore Inventory System AKA.</span> All rights reserved.
+        </div>
+    </footer>
+    <!-- Loading spinner overlay -->
+    <div id="loading-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.7);z-index:2000;align-items:center;justify-content:center;">
+        <div class="spinner-border text-primary" style="width:4rem;height:4rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    <!-- Modal for Add/Edit Book -->
+    <div id="book-modal" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <span class="me-2"><i class="bi bi-journal-plus"></i></span>
+                    <h5 class="modal-title" id="modal-title">Add Book</h5>
+                    <button type="button" class="btn-close btn-close-white" id="close-modal" aria-label="Close"></button>
+                </div>
+                <form id="book-form" novalidate>
+                    <div class="modal-body">
+                        <input type="hidden" id="book-id">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" id="title" class="form-control" required>
+                            <div class="invalid-feedback">Title is required.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="author" class="form-label">Author</label>
+                            <input type="text" id="author" class="form-control" required>
+                            <div class="invalid-feedback">Author is required.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price</label>
+                            <input type="number" id="price" class="form-control" step="0.01" required min="0">
+                            <div class="invalid-feedback">Price must be 0 or more.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">Quantity</label>
+                            <input type="number" id="quantity" class="form-control" required min="0">
+                            <div class="invalid-feedback">Quantity must be 0 or more.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between">
+                        <button type="submit" id="submit-btn" class="btn btn-success w-50 me-2">Add Book</button>
+                        <button type="button" id="cancel-edit" class="btn btn-secondary w-25">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="view-modal" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Book Details</h5>
+                    <button type="button" class="btn-close" id="close-view-modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="view-modal-body"></div>
+            </div>
+        </div>
+    </div>
+    <div id="stock-modal" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="stock-modal-title">Add Stock</h5>
+                    <button type="button" class="btn-close" id="close-stock-modal" aria-label="Close"></button>
+                </div>
+                <form id="stock-form">
+                    <div class="modal-body">
+                        <input type="hidden" id="stock-book-id">
+                        <div class="mb-3">
+                            <label for="stock-amount" class="form-label" id="stock-label">Amount</label>
+                            <input type="number" id="stock-amount" class="form-control" required min="1">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" id="stock-submit-btn" class="btn btn-success">Confirm</button>
+                        <button type="button" id="cancel-stock" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="feedback-toast" class="toast align-items-center text-bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toast-body"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="index.js"></script>
 </body>
 </html> 
