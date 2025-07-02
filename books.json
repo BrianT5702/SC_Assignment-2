@@ -1,7 +1,7 @@
 [ {
   "id" : 1,
-  "title" : "test",
-  "author" : "test",
-  "price" : 22.0,
-  "quantity" : 2
+  "title" : "The Hobbit (Updated)",
+  "author" : "J.R.R. Tolkien",
+  "price" : 21.99,
+  "quantity" : 10
 } ]
