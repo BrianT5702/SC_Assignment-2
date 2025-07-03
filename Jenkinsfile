@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'brian5702/bookstore:latest'
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds-id')
+        DOCKERHUB_CREDENTIALS = credentials('i_dont_know-Docker')
     }
 
     stages {
