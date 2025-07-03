@@ -43,7 +43,7 @@ pipeline {
             }
         stage('Update Jira Issue') {
             steps {
-                jiraIssueSelector selector: [$class: 'IssueKeySelector', issueKey: 'G5-4']
+                jiraIssueSelector issueSelector: [$class: 'IssueKeySelector', issueKey: 'G5-4']
                 jiraAddComment body: 'Build and test completed in Jenkins pipeline.'
             }
         }
