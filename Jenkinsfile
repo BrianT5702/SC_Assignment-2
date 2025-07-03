@@ -43,7 +43,7 @@ pipeline {
             }
         stage('Update Jira Issue') {
             steps {
-                jiraAddComment issueKey: 'G5-4', body: 'Build and test completed in Jenkins pipeline.'
+                jiraComment issueKey: 'G5-4', body: 'Build and test completed in Jenkins pipeline.'
             }
         }
         stage('Docker Build & Push') {
