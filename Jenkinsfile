@@ -7,11 +7,6 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/BrianT5702/SC_Assignment-2.git'
-            }
-        }
         stage('Build') {
             steps {
                 sh './mvnw clean package'
