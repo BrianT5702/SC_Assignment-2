@@ -49,7 +49,7 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', "${i_dont_know-Docker") {
+                    docker.withRegistry('https://index.docker.io/v1/', 'i_dont_know-Docker') {
                         def app = docker.build("${DOCKER_IMAGE}")
                         app.push()
                     }
