@@ -27,7 +27,7 @@ pipeline {
         stage('Update Jira Issue') {
             steps {
                 // Example: update a Jira issue (requires Jira plugin and configuration)
-                jiraIssueSelector idOrKey: 'PROJECT-1'
+                jiraIssueSelector issueSelector: [ 'PROJECT-1' ]
                 jiraAddComment body: 'Build and test completed in Jenkins pipeline.'
             }
         }
